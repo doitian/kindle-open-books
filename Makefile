@@ -8,7 +8,7 @@ MOBIS := $(RECIPES:calibre-recipes/%.recipe=out/%.mobi)
 all: info $(EPUBS) $(MOBIS)
 
 test:
-	@echo $(EPUBS)
+	$(EBOOK_CONVERT) $(RECIPE) $(patsubst calibre-recipes/%.recipe,out/%.epub,$(RECIPE)) --test -vv --debug-pipeline debug
 
 info:
 	@echo "RECIPES:"
