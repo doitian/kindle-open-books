@@ -1,0 +1,46 @@
+import re
+from calibre.web.feeds.recipes import BasicNewsRecipe
+
+class SICP(BasicNewsRecipe):
+
+    title = 'Game Programming Patterns'
+    description = ''
+    cover_url = 'http://d1w7fb2mkkr3kw.cloudfront.net/assets/images/book/large/9780/9905/9780990582908.jpg'
+
+    url_prefix = 'http://gameprogrammingpatterns.com/'
+    no_stylesheets = True
+    remove_tags = [{ 'name': 'aside' }, { 'name': 'nav' }]
+    roman_number = [ 'i', 'ii', 'iii', 'iv' ]
+
+    def get_title(self, link):
+        return link.contents[0].strip()
+
+    def parse_index(self):
+        soup = self.index_to_soup('http://gameprogrammingpatterns.com/contents.html')
+
+        articles = []
+        for ol in soup.findAll('ol'):
+            use_roman = False
+            secid = 1
+
+            if ol.has_key('start'):
+                secid = int(ol['start'])
+            elif ol.has_key('type') and ol['type'] == 'i':
+                use_roman = True
+            else:
+                continue
+
+            for link in ol.findAll('a'):
+              title = self.get_title(link) 
+              url = self.url_prefix + link['href']
+              sec = str(secid)
+              if use_roman:
+                  sec = self.roman_number[secid - 1]
+              a = { 'title': str(sec) + '.' + title, 'url': url }
+
+              articles.append(a)
+              secid += 1
+
+        ans = [('Game Programming Patterns', articles)]
+
+        return ans
