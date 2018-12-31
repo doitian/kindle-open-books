@@ -1,0 +1,33 @@
+from calibre.web.feeds.recipes import BasicNewsRecipe
+
+
+class OtherPeoplesMoney(BasicNewsRecipe):
+
+    title = 'Other People\'s Money And How the Bankers Use It'
+    description = ''
+    cover_url = 'http://louisville.edu/law/library/special-collections/the-louis-d.-brandeis-collection/opm1b.jpg'
+    url_prefix = 'http://louisville.edu/law/library/special-collections/the-louis-d.-brandeis-collection/'
+    keep_only_tags = [{'id': 'content-main'}]
+    no_stylesheets = True
+    resolve_internal_links = True
+
+    def parse_index(self):
+        index_url = self.url_prefix + 'other-peoples-money-by-louis-d.-brandeis'
+        soup = self.index_to_soup(index_url)
+
+        div = soup.find('div', {'id': 'content-main'})
+
+        articles = [{
+            'title': 'Other People\'s Money And How the Bankers Use It',
+            'url': index_url
+        }]
+        for link in div.findAll('a'):
+            if link['href'].startswith(self.url_prefix):
+                title = link.contents[0].strip()
+                a = {'title': title, 'url': link['href']}
+
+                articles.append(a)
+
+        ans = [('Other People\'s Money And How the Bankers Use It', articles)]
+
+        return ans

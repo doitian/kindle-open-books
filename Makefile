@@ -15,7 +15,7 @@ info:
 	@echo "$(foreach r,$(patsubst calibre-recipes/%.recipe,%,$(RECIPES)),\t$(r)\n)"
 
 $(EPUBS): out/%.epub: calibre-recipes/%.recipe
-	$(EBOOK_CONVERT) $< $@
+	$(EBOOK_CONVERT) $< $@ -v
 
 .SUFFIXES: .epub .mobi
 
