@@ -1,0 +1,55 @@
+# -*- mode: python; -*-
+import re
+from calibre.web.feeds.recipes import BasicNewsRecipe
+from urlparse import urlparse
+
+class Etudes_for_Erlang(BasicNewsRecipe):
+    title = 'Actix Docs'
+    url_prefix = 'https://actix.rs/docs/'
+    resolve_internal_links = True
+
+    remove_tags = [
+        { 'name': 'div', 'attrs': { 'class' : 'github-edit' } },
+        { 'name': 'div', 'attrs': { 'class' : 'actix-next' } }
+    ]
+
+    def parse_index(self):
+        soup = self.index_to_soup('https://actix.rs/docs/')
+
+        sections = []
+        for section in soup.find('nav', id='collapsing-docnav').findAll('h5'):
+            section_name = section.contents[0].strip()
+            articles = []
+            for link in section.findNextSibling("div").findAll('a'):
+                if not (link.has_key('href')):
+                    continue
+                if link.has_key('target'):
+                    continue
+
+                title = link.contents[0].strip()
+                url = link['href']
+                if url.endswith('/'):
+                    url = url + 'index.html'
+
+                a = { 'title': title, 'url': url }
+
+                articles.append(a)
+
+            if len(articles) > 0:
+                sections.append((section_name, articles))
+
+        return sections
+
+    def canonicalize_internal_url(self, url, is_link=True):
+        try:
+            parts = urlparse(url)
+        except Exception:
+            self.log.error('Failed to parse url: %r, ignoring' % url)
+            return frozenset()
+        path = parts.path or ''
+        if path.endswith('/'):
+            path = path + 'index.html'
+        return frozenset([(parts.netloc, path)])
+
+    def postprocess_html(self, soup, first_fetch):
+        return soup.find('div', attrs={ 'class': 'actix-content' })

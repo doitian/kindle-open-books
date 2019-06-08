@@ -1,0 +1,7 @@
+; -*- conf -*-
+; EditorConfig is awesome: http://EditorConfig.org
+
+[*.recipe]
+indent_style = space
+indent_size = 4
+tab_width = 4
