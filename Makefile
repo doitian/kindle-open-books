@@ -22,6 +22,6 @@ $(TITLES): %: out/%.epub out/%.mobi
 	$(EBOOK_CONVERT) $< $@
 
 clean:
-	rm -rf out/*.epub out/*.mobi
+	rm -rf out/*.epub out/*.mobi debug/
 
 .PHONY: all info clean $(TITLES)

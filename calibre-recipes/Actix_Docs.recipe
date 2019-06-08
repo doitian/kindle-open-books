@@ -8,6 +8,7 @@ class Etudes_for_Erlang(BasicNewsRecipe):
     url_prefix = 'https://actix.rs/docs/'
     resolve_internal_links = True
 
+    keep_only_tags = [{ 'class': 'actix-content' }]
     remove_tags = [
         { 'name': 'div', 'attrs': { 'class' : 'github-edit' } },
         { 'name': 'div', 'attrs': { 'class' : 'actix-next' } }
@@ -50,6 +51,3 @@ class Etudes_for_Erlang(BasicNewsRecipe):
         if path.endswith('/'):
             path = path + 'index.html'
         return frozenset([(parts.netloc, path)])
-
-    def postprocess_html(self, soup, first_fetch):
-        return soup.find('div', attrs={ 'class': 'actix-content' })
