@@ -3,7 +3,7 @@ import re
 from calibre.web.feeds.recipes import BasicNewsRecipe
 from urlparse import urlparse
 
-class Etudes_for_Erlang(BasicNewsRecipe):
+class ActixDocs(BasicNewsRecipe):
     title = 'Actix Docs'
     url_prefix = 'https://actix.rs/docs/'
     resolve_internal_links = True
