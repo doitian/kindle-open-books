@@ -1,0 +1,62 @@
+# -*- mode: python; -*-
+import re
+from calibre.web.feeds.recipes import BasicNewsRecipe
+from urlparse import urlparse
+
+
+class TokioDocs(BasicNewsRecipe):
+    title = 'Tokio Docs'
+    url_prefix = 'https://tokio.rs/docs/'
+    resolve_internal_links = True
+
+    keep_only_tags = [{'class': 'tk-content'}]
+    remove_tags = [
+        { 'name': 'div', 'attrs': { 'class' : 'github-edit' } },
+        { 'name': 'div', 'attrs': { 'class' : 'tk-next' } }
+    ]
+
+    def parse_index(self):
+        soup = self.index_to_soup('https://tokio.rs/docs/overview/')
+
+        sections = []
+        for section in soup.find('nav', id='tk-docs-nav').findAll('a', class_='tk-toc-link'):
+            section_name = section.contents[0].strip()
+            section_url = section['href']
+            if not section_url.startswith(self.url_prefix):
+                continue
+            if section_url.endswith('/'):
+                section_url = section_url + 'index.html'
+
+            articles = []
+            subnav = section.findNextSibling("ul")
+            if subnav:
+                for link in subnav.findAll('a'):
+                    if not link['href'].startswith(self.url_prefix):
+                        continue
+
+                    title = link.contents[0].strip()
+                    url = link['href']
+                    if url.endswith('/'):
+                        url = url + 'index.html'
+
+                    a = {'title': title, 'url': url}
+
+                    articles.append(a)
+
+            if len(articles) == 0:
+                articles.append({'title': section_name, 'url': section_url})
+            sections.append((section_name, articles))
+
+        print(sections)
+        return sections
+
+    def canonicalize_internal_url(self, url, is_link=True):
+        try:
+            parts = urlparse(url)
+        except Exception:
+            self.log.error('Failed to parse url: %r, ignoring' % url)
+            return frozenset()
+        path = parts.path or ''
+        if path.endswith('/'):
+            path = path + 'index.html'
+        return frozenset([(parts.netloc, path)])
