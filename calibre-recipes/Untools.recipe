@@ -1,0 +1,46 @@
+from calibre.web.feeds.recipes import BasicNewsRecipe
+
+
+class Untools(BasicNewsRecipe):
+
+    title = 'Untools'
+    description = 'Tools for better thinking. Collection of thinking tools and frameworks to help you solve problems, make decisions and understand systems.'
+    cover_url = 'https://ph-files.imgix.net/3886fe70-aabf-4d8e-94c2-6b2e982eae65.png?auto=format&auto=compress&codec=mozjpeg&cs=strip'
+
+    url_prefix = 'https://untools.co/'
+    no_stylesheets = True
+    keep_only_tags = [{'name': 'main'}]
+    resolve_internal_links = True
+
+    def parse_index(self):
+        soup = self.index_to_soup(self.url_prefix)
+
+        articles = []
+        for link in soup.find('main').find_all('a'):
+            if 'class' in link.attrs and ' '.join(link['class']).startswith('gallery-item-module--item') and link['href'].startswith('/'):
+                title = link.find('h2').string
+                description = link.find('p').string
+                articles.append({
+                    'title': title,
+                    'description': description,
+                    'url': self.url_prefix + link['href'][1:]
+                })
+
+        return [('Untools', articles)]
+
+    def postprocess_html(self, soup, first_fetch):
+        for div in soup.find_all('div'):
+            if 'class' in div.attrs and ' '.join(div['class']).startswith('share-module--share'):
+                div.extract()
+
+            if 'class' in div.attrs and ' '.join(div['class']).startswith('article-module--similar-container'):
+                list = soup.new_tag('ul')
+                div.parent.append(list)
+                for child in div.extract().children:
+                    link = soup.new_tag('a', href=child['href'])
+                    link.string = child.find('h2').string
+                    item = soup.new_tag('li')
+                    item.append(link)
+                    list.append(item)
+
+        return soup
