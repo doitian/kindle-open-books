@@ -1,0 +1,65 @@
+# -*- mode: python; -*-
+import re
+from calibre.web.feeds.recipes import BasicNewsRecipe
+from calibre.utils.icu import numeric_sort_key
+from urlparse import urlparse
+
+
+class LightingRFC(BasicNewsRecipe):
+    title = 'Lighting RFC'
+    url_prefix = 'https://github.com/lightningnetwork/lightning-rfc/blob/master/'
+    resolve_internal_links = True
+
+    keep_only_tags = [{'class': 'entry-content'}]
+
+    def parse_index(self):
+        return [('Lighting RFC', [
+                {'title': 'BOLT #0 Introduction and Index',
+                    'url': self.url_prefix + '00-introduction.md'},
+                {'title': 'BOLT #1 Base Protocol',
+                    'url': self.url_prefix + '01-messaging.md'},
+                {'title': 'BOLT #2 Peer Protocol for Channel Management',
+                    'url': self.url_prefix + '02-peer-protocol.md'},
+                {'title': 'BOLT #3 Bitcoin Transaction and Script Formats',
+                    'url': self.url_prefix + '03-transactions.md'},
+                {'title': 'BOLT #4 Onion Routing Protocol',
+                    'url': self.url_prefix + '04-onion-routing.md'},
+                {'title': 'BOLT #5 Recommendations for On-chain Transaction Handling',
+                    'url': self.url_prefix + '05-onchain.md'},
+                {'title': 'BOLT #7 P2P Node and Channel Discovery',
+                    'url': self.url_prefix + '07-routing-gossip.md'},
+                {'title': 'BOLT #8 Encrypted and Authenticated Transport',
+                    'url': self.url_prefix + '08-transport.md'},
+                {'title': 'BOLT #9 Assigned Feature Flags',
+                    'url': self.url_prefix + '09-features.md'},
+                {'title': 'BOLT #10 DNS Bootstrap and Assisted Node Location',
+                    'url': self.url_prefix + '10-dns-bootstrap.md'},
+                {'title': 'BOLT #11 Invoice Protocol for Lightning Payments',
+                    'url': self.url_prefix + '11-payment-encoding.md'}
+                ])]
+
+    def populate_article_metadata(self, article, ans, first_fetch):
+        for a in ans.find_all(href=True):
+            if a['href'].startswith('#'):
+                a['href'] = article.url + a['href']
+
+    def internal_postprocess_book(self, oeb, opts, log):
+        if self.resolve_internal_links and self.article_url_map:
+            seen = set()
+            for item in oeb.spine:
+                for a in item.data.xpath('//*[local-name()="a" and @href]'):
+                    if a.get('rel') == 'calibre-downloaded-from':
+                        continue
+                    url = a.get('href')
+                    parts = urlparse(url)
+                    for curl in self.canonicalize_internal_url(url):
+                        articles = self.article_url_map.get(curl)
+                        if articles:
+                            arelpath = sorted(articles, key=numeric_sort_key)[0]
+                            href = item.relhref(arelpath)
+                            if parts.fragment != '':
+                                href = href + '#user-content-' + parts.fragment
+                            a.set('href', href)
+                            if url not in seen:
+                                log.debug('Resolved internal URL: %s -> %s' % (url, arelpath))
+                                seen.add(url)
